@@ -136,9 +136,30 @@ export default function UploadPage() {
 
         {state.step === "generating_report" && <LoadingScreen step="generating_report" />}
 
+        {/* 🔥 Updated: Handle done state with error fallback */}
         {state.step === "done" && (
           state.report ? (
             <ReportStep report={state.report} onReset={reset} />
+          ) : state.error ? (
+            <div className="text-center py-12">
+              <div className="text-5xl mb-4">⏳</div>
+              <div className="text-red-400 text-lg mb-4">{state.error}</div>
+              <p className="text-gray-400 text-sm mb-6">The report generation is taking longer than expected.</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors"
+                >
+                  Refresh Page
+                </button>
+                <button
+                  onClick={reset}
+                  className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors"
+                >
+                  Start Over
+                </button>
+              </div>
+            </div>
           ) : (
             <div className="text-center text-white/60 py-12">
               <div className="animate-pulse">Loading report...</div>

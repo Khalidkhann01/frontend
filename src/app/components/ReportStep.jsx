@@ -2,10 +2,95 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { RefreshCw, Award, BarChart3, TrendingUp } from "lucide-react";
+import { RefreshCw, Award, BarChart3, TrendingUp, Download } from "lucide-react";
+import { useEffect } from "react";
 
 export function ReportStep({ report, onReset }) {
-  const avgNum = parseFloat(String(report.avgScore || report.averageScore || 0));
+  // 🔥 LOG: Component mounted
+  useEffect(() => {
+    console.log('📊 [ReportStep] Component mounted');
+    console.log('📊 [ReportStep] Report data received:', {
+      hasReport: !!report,
+      hasHtmlReport: !!report?.htmlReport,
+      htmlReportLength: report?.htmlReport?.length || 0,
+      avgScore: report?.avgScore,
+      totalQuestions: report?.totalQuestions,
+      reportKeys: report ? Object.keys(report) : 'No report'
+    });
+    
+    if (report?.htmlReport) {
+      console.log('📊 [ReportStep] HTML Report preview:', report.htmlReport.substring(0, 200) + '...');
+    }
+    
+    return () => {
+      console.log('📊 [ReportStep] Component unmounting');
+    };
+  }, [report]);
+
+  // 🔥 LOG: Check if we have HTML report
+  console.log('📊 [ReportStep] Rendering with report.htmlReport:', !!report?.htmlReport);
+
+  // If we have HTML report, render it directly
+  if (report?.htmlReport) {
+    console.log('📊 [ReportStep] ✅ Rendering HTML report, length:', report.htmlReport.length);
+    
+    return (
+      <div className="animate-slide-up">
+        {/* 🔥 LOG: HTML Report rendering */}
+        <div className="text-xs text-gray-500 text-center mb-2">
+          📊 HTML Report ({report.htmlReport.length} characters)
+        </div>
+        <div 
+          dangerouslySetInnerHTML={{ __html: report.htmlReport }} 
+          className="report-container"
+          style={{ 
+            background: 'transparent',
+            padding: 0,
+            margin: 0
+          }}
+          onError={(e) => {
+            console.error('❌ [ReportStep] Error rendering HTML report:', e);
+          }}
+        />
+        <div className="mt-6 flex justify-center gap-4">
+          <button
+            onClick={() => {
+              console.log('📊 [ReportStep] Reset button clicked');
+              onReset();
+            }}
+            className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white transition-colors flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Start New Interview
+          </button>
+          <button
+            onClick={() => {
+              console.log('📊 [ReportStep] Print button clicked');
+              window.print();
+            }}
+            className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Download Report
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 🔥 LOG: No HTML report, using fallback
+  console.log('📊 [ReportStep] ⚠️ No HTML report, using fallback structured view');
+  console.log('📊 [ReportStep] Fallback report data:', {
+    avgScore: report?.avgScore,
+    totalQuestions: report?.totalQuestions,
+    hasCatAvgs: !!report?.catAvgs,
+    top3Count: report?.top3?.length || 0,
+    bottom3Count: report?.bottom3?.length || 0,
+    scoresCount: report?.scores?.length || 0
+  });
+
+  // Fallback: Structured report data
+  const avgNum = parseFloat(String(report?.avgScore || report?.averageScore || 0));
   const scoreColor = avgNum >= 8.5 ? "text-green-400" : avgNum >= 6 ? "text-amber-400" : "text-red-400";
   const recColor = avgNum >= 8.5 
     ? "bg-green-500/10 text-green-400 border-green-500/20" 
@@ -23,7 +108,7 @@ export function ReportStep({ report, onReset }) {
         </div>
         <h1 className="text-2xl font-bold text-white mb-1">Interview Complete!</h1>
         <p className="text-gray-400 text-sm mb-4">
-          {report.totalQuestions || 0} questions · {report.totalTimeMinutes || 0} min · {report.jobTitle || ''}
+          {report?.totalQuestions || 0} questions · {report?.totalTimeMinutes || 0} min · {report?.jobTitle || ''}
         </p>
 
         <div className={cn("text-6xl font-bold mb-2", scoreColor)}>
@@ -34,17 +119,17 @@ export function ReportStep({ report, onReset }) {
           "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
           recColor
         )}>
-          {report.recommendation || 'No recommendation'}
+          {report?.recommendation || 'No recommendation'}
         </span>
 
         <div className="mt-4 flex justify-center gap-6 text-xs text-gray-400">
           <span className="flex items-center gap-1.5">
             <Award className="h-3.5 w-3.5 text-purple-400" />
-            {report.totalQuestions || 0} Questions
+            {report?.totalQuestions || 0} Questions
           </span>
           <span className="flex items-center gap-1.5">
             <BarChart3 className="h-3.5 w-3.5 text-purple-400" />
-            {report.totalTimeMinutes || 0} Minutes
+            {report?.totalTimeMinutes || 0} Minutes
           </span>
           <span className="flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5 text-purple-400" />
@@ -56,7 +141,7 @@ export function ReportStep({ report, onReset }) {
       </div>
 
       {/* Category breakdown */}
-      {report.catAvgs && Object.keys(report.catAvgs).length > 0 && (
+      {report?.catAvgs && Object.keys(report.catAvgs).length > 0 && (
         <div className="relative p-6 rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-white/5">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg">📊</span>
@@ -88,7 +173,7 @@ export function ReportStep({ report, onReset }) {
       )}
 
       {/* Top 3 */}
-      {report.top3 && report.top3.length > 0 && (
+      {report?.top3 && report.top3.length > 0 && (
         <div className="relative p-6 rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-white/5">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg">🏆</span>
@@ -113,7 +198,7 @@ export function ReportStep({ report, onReset }) {
       )}
 
       {/* Bottom 3 */}
-      {report.bottom3 && report.bottom3.length > 0 && (
+      {report?.bottom3 && report.bottom3.length > 0 && (
         <div className="relative p-6 rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-white/5">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-lg">📈</span>
@@ -139,7 +224,10 @@ export function ReportStep({ report, onReset }) {
 
       <div className="text-center">
         <button
-          onClick={onReset}
+          onClick={() => {
+            console.log('📊 [ReportStep] Reset button clicked (fallback view)');
+            onReset();
+          }}
           className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 text-white text-sm font-medium rounded-full border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 active:scale-[0.98]"
         >
           <RefreshCw className="h-4 w-4" />

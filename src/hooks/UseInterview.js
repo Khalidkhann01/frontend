@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+let reportLogCount = 0;
 
 export function useInterview() {
   const router = useRouter();
@@ -151,7 +152,6 @@ export function useInterview() {
         const questionNum = data.questionNumber || 0;
         const eventId = `q_${state.sessionId}_${questionNum}`;
         
-        // Check if already processed
         if (processedEvents.current.has(eventId)) {
           console.log(`⏭️ Skipping duplicate question ${questionNum}`);
           return;
@@ -159,7 +159,6 @@ export function useInterview() {
         
         console.log('❓ Question received:', data);
         
-        // Clear timeout since we got a question
         if (questionTimeout.current) {
           clearTimeout(questionTimeout.current);
           questionTimeout.current = null;
@@ -169,7 +168,6 @@ export function useInterview() {
           setState(prev => {
             const currentQNum = prev.currentQuestion?.questionNumber || 0;
             
-            // Only update if this is a newer question or first question
             if (questionNum > currentQNum || !prev.currentQuestion) {
               processedEvents.current.add(eventId);
               return {
@@ -204,24 +202,21 @@ export function useInterview() {
       }
     });
 
-    // 🔥 NEW: Handle combined feedback + question event
+    // Handle combined feedback + question event
     es.addEventListener('question_with_feedback', (e) => {
       try {
         const data = JSON.parse(e.data);
         console.log('📦 Combined event received:', data);
         
-        // Clear timeout since we got a response
         if (questionTimeout.current) {
           clearTimeout(questionTimeout.current);
           questionTimeout.current = null;
         }
         
         if (isMounted.current) {
-          // Update feedback
           setState(prev => ({
             ...prev,
             lastFeedback: data.feedback,
-            // Update question to the next one
             currentQuestion: data.nextQuestion,
             step: 'interview',
             loading: false
@@ -233,39 +228,87 @@ export function useInterview() {
       }
     });
 
-    // Handle interview done
+    // 🔥 Handle interview done - WITH TIMEOUT (ONLY ONE!)
     es.addEventListener('interview_done', (e) => {
       try {
         const data = JSON.parse(e.data);
-        console.log('🏁 Interview done:', data);
+        console.log('🏁 [REPORT] 🔥 INTERVIEW_DONE received!');
+        console.log('🏁 [REPORT] Session:', state.sessionId);
+        console.log('🏁 [REPORT] Data:', data);
+        
         if (isMounted.current) {
           setState(prev => ({
             ...prev,
             step: 'generating_report',
             loading: true
           }));
+          
+          // Add timeout for report generation - 60 seconds
+          if (questionTimeout.current) {
+            clearTimeout(questionTimeout.current);
+          }
+          questionTimeout.current = setTimeout(() => {
+            if (isMounted.current) {
+              console.log('⏰ [REPORT] ⚠️ TIMEOUT - No report received after 60 seconds');
+              setState(prev => {
+                if (prev.step === 'generating_report') {
+                  return {
+                    ...prev,
+                    error: 'Report generation is taking longer than expected. Please refresh or try again.',
+                    step: 'done',
+                    loading: false
+                  };
+                }
+                return prev;
+              });
+              setLoading(false);
+            }
+          }, 60000);
         }
       } catch (error) {
         console.error('Error parsing interview_done:', error);
       }
     });
 
-    // Handle report
+    // 🔥 Handle report - WITH DETAILED LOGGING
     es.addEventListener('report_ready', (e) => {
+      reportLogCount++;
+      console.log(`📊 [REPORT] 🚀 REPORT_READY #${reportLogCount} RECEIVED!`);
+      console.log(`📊 [REPORT] Session: ${state.sessionId}`);
+      console.log(`📊 [REPORT] Raw data preview: ${e.data.substring(0, 200)}...`);
+      
       try {
         const data = JSON.parse(e.data);
+        console.log('📊 [REPORT] Parsed data:', {
+          hasHtmlReport: !!data.htmlReport,
+          htmlReportLength: data.htmlReport?.length || 0,
+          avgScore: data.avgScore,
+          totalQuestions: data.totalQuestions,
+          candidateName: data.candidateName,
+          keys: Object.keys(data)
+        });
+        
         const eventId = `report_${state.sessionId}`;
         
         if (processedEvents.current.has(eventId)) {
-          console.log('⏭️ Skipping duplicate report');
+          console.log('⏭️ [REPORT] Skipping duplicate report');
           return;
         }
         processedEvents.current.add(eventId);
         
-        console.log('📊 Report received:', data);
+        console.log('📊 [REPORT] ✅ Report valid, updating state...');
+        
+        // Clear timeout since report arrived
+        if (questionTimeout.current) {
+          console.log('📊 [REPORT] Clearing timeout');
+          clearTimeout(questionTimeout.current);
+          questionTimeout.current = null;
+        }
+        
         if (isMounted.current) {
           setState(prev => {
             if (prev.step !== 'done') {
+              console.log('📊 [REPORT] Setting report in state, step: done');
               return {
                 ...prev,
                 report: data,
@@ -273,16 +316,19 @@ export function useInterview() {
                 loading: false
               };
             }
+            console.log('📊 [REPORT] State already done, skipping');
             return prev;
           });
           setLoading(false);
+          console.log('📊 [REPORT] ✅ Report displayed successfully!');
         }
       } catch (error) {
-        console.error('Error parsing report:', error);
+        console.error('❌ [REPORT] Error parsing report:', error);
+        console.error('❌ [REPORT] Raw data:', e.data);
         if (isMounted.current) {
           setState(prev => ({
             ...prev,
-            error: 'Failed to generate report',
+            error: 'Failed to generate report: ' + error.message,
             step: 'done',
             loading: false
           }));
@@ -587,6 +633,16 @@ export function useInterview() {
       setLoading(false);
     }
   }, [eventSource]);
+
+  // Monitor state changes for report
+  useEffect(() => {
+    if (state.step === 'done') {
+      console.log('📊 [REPORT] State is now "done"');
+      console.log('📊 [REPORT] Report in state:', !!state.report);
+      console.log('📊 [REPORT] Report has htmlReport:', !!state.report?.htmlReport);
+      console.log('📊 [REPORT] Report keys:', state.report ? Object.keys(state.report) : 'No report');
+    }
+  }, [state.step, state.report]);
 
   return {
     state,
