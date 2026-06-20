@@ -14,7 +14,6 @@ import { ChevronLeft } from "lucide-react";
 
 export default function UploadPage() {
   const { state, loading, uploadCV, setJob, startInterview, submitAnswer, reset } = useInterview();
-  const email = state._email || "";
 
   const steps = ["Upload", "CV Analysis", "Job Match", "Interview", "Report"];
   const stepMap = ["upload", "analyzing", "set_job", "matching", "mismatch", "ready", "interview", "generating_report", "done"];
@@ -107,10 +106,7 @@ export default function UploadPage() {
           <SetJobStep
             cv={state.cvResult}
             firstName={state.firstName}
-            onSetJob={(title, desc, mail) => {
-              state._email = mail;
-              setJob(title, desc, mail);
-            }}
+            onSetJob={(title, desc) => setJob(title, desc)}
             loading={loading}
           />
         )}
@@ -124,7 +120,6 @@ export default function UploadPage() {
         {state.step === "ready" && state.jobMatch && (
           <ReadyStep
             match={state.jobMatch}
-            email={email}
             onStart={startInterview}
             loading={loading}
           />
@@ -141,8 +136,14 @@ export default function UploadPage() {
 
         {state.step === "generating_report" && <LoadingScreen step="generating_report" />}
 
-        {state.step === "done" && state.report && (
-          <ReportStep report={state.report} onReset={reset} />
+        {state.step === "done" && (
+          state.report ? (
+            <ReportStep report={state.report} onReset={reset} />
+          ) : (
+            <div className="text-center text-white/60 py-12">
+              <div className="animate-pulse">Loading report...</div>
+            </div>
+          )
         )}
       </div>
     </main>

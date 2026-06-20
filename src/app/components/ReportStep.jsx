@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { RefreshCw, Award, BarChart3, TrendingUp } from "lucide-react";
 
 export function ReportStep({ report, onReset }) {
-  const avgNum = parseFloat(String(report.avgScore));
+  const avgNum = parseFloat(String(report.avgScore || report.averageScore || 0));
   const scoreColor = avgNum >= 8.5 ? "text-green-400" : avgNum >= 6 ? "text-amber-400" : "text-red-400";
   const recColor = avgNum >= 8.5 
     ? "bg-green-500/10 text-green-400 border-green-500/20" 
@@ -23,36 +23,36 @@ export function ReportStep({ report, onReset }) {
         </div>
         <h1 className="text-2xl font-bold text-white mb-1">Interview Complete!</h1>
         <p className="text-gray-400 text-sm mb-4">
-          {report.totalQuestions} questions · {report.totalTimeMinutes} min · {report.jobTitle}
+          {report.totalQuestions || 0} questions · {report.totalTimeMinutes || 0} min · {report.jobTitle || ''}
         </p>
 
         <div className={cn("text-6xl font-bold mb-2", scoreColor)}>
-          {report.avgScore}
+          {avgNum.toFixed(1)}
           <span className="text-2xl text-gray-500">/10</span>
         </div>
         <span className={cn(
           "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
           recColor
         )}>
-          {report.recommendation}
+          {report.recommendation || 'No recommendation'}
         </span>
 
         <div className="mt-4 flex justify-center gap-6 text-xs text-gray-400">
           <span className="flex items-center gap-1.5">
             <Award className="h-3.5 w-3.5 text-purple-400" />
-            {report.totalQuestions} Questions
+            {report.totalQuestions || 0} Questions
           </span>
           <span className="flex items-center gap-1.5">
             <BarChart3 className="h-3.5 w-3.5 text-purple-400" />
-            {report.totalTimeMinutes} Minutes
+            {report.totalTimeMinutes || 0} Minutes
           </span>
           <span className="flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5 text-purple-400" />
-            {report.avgScore}/10 Avg
+            {avgNum.toFixed(1)}/10 Avg
           </span>
         </div>
 
-        <p className="text-sm text-gray-400 mt-4">{report.message}</p>
+        <p className="text-sm text-green-400 mt-4">✅ Your report is ready!</p>
       </div>
 
       {/* Category breakdown */}
@@ -137,10 +137,7 @@ export function ReportStep({ report, onReset }) {
         </div>
       )}
 
-      <div className="text-center space-y-4">
-        <p className="text-sm text-gray-400">
-          Full HTML report sent to <span className="text-white">{report.candidateEmail}</span>
-        </p>
+      <div className="text-center">
         <button
           onClick={onReset}
           className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 text-white text-sm font-medium rounded-full border border-white/10 transition-all duration-300 hover:bg-white/10 hover:border-white/20 active:scale-[0.98]"

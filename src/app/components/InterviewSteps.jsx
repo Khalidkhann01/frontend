@@ -23,7 +23,24 @@ export function InterviewStep({ question, feedback, onSubmit, loading }) {
     setSubmitted(false);
   };
 
-  const progress = ((question.questionNumber - 1) / question.totalQuestions) * 100;
+  // 🔥 FIX: Add safe fallback if question is undefined or null
+  if (!question) {
+    return (
+      <div className="max-w-2xl mx-auto text-center py-12">
+        <div className="animate-pulse text-white/60">Loading question...</div>
+      </div>
+    );
+  }
+
+  // 🔥 FIX: Safe access with default values
+  const questionNumber = question.questionNumber || 0;
+  const totalQuestions = question.totalQuestions || 20;
+  const category = question.category || 'General';
+  const difficulty = question.difficulty || 'Medium';
+  const questionText = question.question || 'No question available';
+  const followUp = question.followUp || '';
+
+  const progress = totalQuestions > 0 ? ((questionNumber - 1) / totalQuestions) * 100 : 0;
 
   const getScoreColor = (score) => {
     if (score >= 8.5) return "text-green-400";
@@ -46,13 +63,13 @@ export function InterviewStep({ question, feedback, onSubmit, loading }) {
       {/* Progress */}
       <div className="space-y-1.5">
         <div className="flex justify-between text-xs">
-          <span className="text-gray-400">Question {question.questionNumber} of {question.totalQuestions}</span>
+          <span className="text-gray-400">Question {questionNumber} of {totalQuestions}</span>
           <span className="text-purple-400">{Math.round(progress)}% complete</span>
         </div>
         <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
           <div
             className="h-full bg-gradient-to-r from-purple-500 to-purple-400 rounded-full transition-all duration-700"
-            style={{ width: `${progress}%` }}
+            style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
       </div>
@@ -61,10 +78,10 @@ export function InterviewStep({ question, feedback, onSubmit, loading }) {
       {feedback && (
         <div className="relative p-5 rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-purple-500/20 border-l-4 border-l-purple-400">
           <div className="flex items-center gap-4 mb-3">
-            <span className={cn("text-3xl font-bold", getScoreColor(feedback.score))}>
-              {feedback.score}/10
+            <span className={cn("text-3xl font-bold", getScoreColor(feedback.score || 0))}>
+              {feedback.score || 0}/10
             </span>
-            <span className="text-sm text-gray-400">{feedback.feedbackMessage}</span>
+            <span className="text-sm text-gray-400">{feedback.feedbackMessage || ''}</span>
           </div>
 
           {feedback.strengths && (
@@ -89,20 +106,20 @@ export function InterviewStep({ question, feedback, onSubmit, loading }) {
       <div className="relative p-6 rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-white/5">
         <div className="flex gap-2 mb-4">
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-purple-500/10 text-purple-400 border-purple-500/20">
-            {question.category}
+            {category}
           </span>
           <span className={cn(
             "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
-            getDifficultyColor(question.difficulty)
+            getDifficultyColor(difficulty)
           )}>
-            {question.difficulty}
+            {difficulty}
           </span>
         </div>
 
-        <p className="text-white font-medium text-base mb-1 leading-relaxed">{question.question}</p>
+        <p className="text-white font-medium text-base mb-1 leading-relaxed">{questionText}</p>
 
-        {question.followUp && (
-          <p className="text-xs text-gray-400 italic mb-4">Follow-up: {question.followUp}</p>
+        {followUp && (
+          <p className="text-xs text-gray-400 italic mb-4">Follow-up: {followUp}</p>
         )}
 
         <div className="space-y-1.5">

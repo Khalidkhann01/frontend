@@ -6,6 +6,7 @@ import Link from 'next/link';
 
 const Landing = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const [mounted, setMounted] = useState(false);
 
   const workflowSteps = [
     {
@@ -39,11 +40,116 @@ const Landing = () => {
   ];
 
   useEffect(() => {
+    setMounted(true);
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % workflowSteps.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [workflowSteps.length]);
+
+  // If not mounted, show a static version to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-hidden bg-black">
+        {/* Animated gradient orbs */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-[-20%] left-[-10%] w-[400px] h-[400px] bg-purple-500/5 rounded-full blur-3xl" />
+          <div className="absolute top-[50%] left-[50%] w-[300px] h-[300px] bg-purple-400/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
+        </div>
+
+        {/* Grid pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />
+
+        <div className="relative w-full max-w-5xl">
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-12">
+            <div className="relative">
+              <div className="absolute inset-0 bg-purple-500/30 rounded-lg blur-xl" />
+              <div className="relative w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center text-sm font-bold text-white">
+                AI
+              </div>
+            </div>
+            <span className="font-bold text-white/90">Webhook AI Interview</span>
+            <span className="ml-auto text-xs text-gray-500 border border-gray-800 px-2 py-0.5 rounded-full">
+              Personal Project
+            </span>
+          </div>
+
+          {/* Main Content - Static version */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-3 py-1 text-xs text-purple-300">
+                <span className="w-1 h-1 bg-purple-400 rounded-full" />
+                AI Interview Orchestration
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
+                <span className="text-white">Practice </span>
+                <span className="text-purple-400">AI Interviews</span>
+                <br />
+                <span className="text-white/70">with Real-Time Feedback</span>
+              </h1>
+              <p className="text-sm text-gray-400 leading-relaxed max-w-md">
+                A personal project that simulates the complete hiring process. Upload your CV, 
+                get matched to a role, practice interview questions, and receive detailed 
+                performance reports with coaching insights.
+              </p>
+              <Link href="/upload">
+                <button className="relative px-6 py-3 bg-purple-600 text-white text-sm font-medium rounded-full hover:bg-purple-700 transition-all duration-300 flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Start Practice
+                </button>
+              </Link>
+              <div className="flex flex-wrap gap-1.5 pt-2">
+                {['n8n', 'Groq', 'Llama', 'Gmail API', 'SSE', 'React', 'Next.js', 'Tailwind'].map((tech) => (
+                  <span key={tech} className="text-[10px] px-2 py-0.5 bg-white/5 border border-white/5 rounded-full text-gray-500">
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="relative">
+              <div className="space-y-3">
+                {workflowSteps.map((step, index) => (
+                  <div key={step.id} className="relative">
+                    <div className="relative flex items-center gap-4 p-3 rounded-xl bg-white/5 border border-white/5">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium bg-gray-800 text-gray-600 border border-gray-700">
+                          {step.id}
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{step.icon}</span>
+                          <h3 className="text-sm font-medium text-gray-500">
+                            {step.title}
+                          </h3>
+                        </div>
+                        <p className="text-xs text-gray-600">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-12 pt-6 border-t border-white/5 flex flex-wrap justify-between items-center gap-3 text-[11px] text-gray-600">
+            <span>© 2026 Webhook AI Interview — Personal Project</span>
+            <div className="flex gap-4">
+              <span className="hover:text-white/80 transition-colors cursor-pointer">GitHub</span>
+              <span className="hover:text-white/80 transition-colors cursor-pointer">Documentation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-hidden bg-black">
@@ -117,7 +223,7 @@ const Landing = () => {
           </div>
 
           {/* Right Column - Animated Workflow */}
-          <div className="relative">
+          <div className="relative" suppressHydrationWarning>
             <div className="space-y-3">
               {workflowSteps.map((step, index) => {
                 const isActive = index === activeStep;

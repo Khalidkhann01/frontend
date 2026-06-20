@@ -8,7 +8,6 @@ import { ArrowRight } from "lucide-react";
 export function SetJobStep({ cv, firstName, onSetJob, loading }) {
   const [jobTitle, setJobTitle] = useState("");
   const [jobDescription, setJobDescription] = useState("");
-  const [email, setEmail] = useState("");
 
   const riskColorMap = {
     Low: "green",
@@ -115,7 +114,7 @@ export function SetJobStep({ cv, firstName, onSetJob, loading }) {
         </div>
       </div>
 
-      {/* Set job */}
+      {/* Set job - EMAIL REMOVED */}
       <div className="relative p-6 rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-white/5">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">🎯</span>
@@ -147,23 +146,12 @@ export function SetJobStep({ cv, firstName, onSetJob, loading }) {
             />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-sm font-medium text-gray-300">Your email (for the report)</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              className="w-full rounded-xl bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent transition-all duration-300"
-            />
-          </div>
-
           <button
-            onClick={() => onSetJob(jobTitle, jobDescription, email)}
-            disabled={!jobTitle.trim() || !jobDescription.trim() || !email.trim() || loading}
+            onClick={() => onSetJob(jobTitle, jobDescription)}
+            disabled={!jobTitle.trim() || !jobDescription.trim() || loading}
             className={cn(
               "relative w-full px-6 py-3 bg-purple-600 text-white text-sm font-medium rounded-full transition-all duration-300 flex items-center justify-center gap-2",
-              (!jobTitle.trim() || !jobDescription.trim() || !email.trim() || loading)
+              (!jobTitle.trim() || !jobDescription.trim() || loading)
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-purple-700 hover:shadow-[0_4px_30px_rgba(139,92,246,0.3)] active:scale-[0.98]"
             )}
